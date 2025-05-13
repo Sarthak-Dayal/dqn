@@ -2,7 +2,6 @@ from utils import ReplayBuffer, FrameStack, Transition
 from actor import DQNAgent
 import gymnasium as gym
 import ale_py
-import numpy as np
 
 gym.register_envs(ale_py)
 
@@ -11,7 +10,7 @@ REPLAY_CAP = 10000
 BATCH_SIZE = 32
 TRAIN_STEPS = 100000
 GAMMA = 0.95
-EPSILON = 0.05
+eps_min, eps_start, decay_rate = 0.05, 1, 1/TRAIN_STEPS
 
 stacker = FrameStack(STACKER_CAP)
 buffer = ReplayBuffer(REPLAY_CAP, BATCH_SIZE)
@@ -24,8 +23,10 @@ total = 0
 
 for i in range(TRAIN_STEPS):
     terminated, truncated = False, False
+    eps = max(eps_min, eps_start - i * decay_rate)
+
     while not terminated and not truncated:
-        act = actor.act(state, EPSILON)
+        act = actor.act(state, eps)
         obs, reward, terminated, truncated, info = env.step(act)
         next_state = stacker.add(obs)
         buffer.add(Transition(state.squeeze(0), act, reward, next_state, terminated or truncated))
