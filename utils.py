@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 from collections import deque
 import random
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, Union
 import torch
 
 def preprocess(obs: np.ndarray):
@@ -22,9 +22,10 @@ def preprocess(obs: np.ndarray):
 
 
 class FrameStack:
-    def __init__(self, cap: int):
+    def __init__(self, cap: int, device: Union[torch.device, str]):
         self.cap = cap
         self.buffer = deque(maxlen=cap)
+        self.device = device
     
     def reset(self, init_frame: np.ndarray):
         first = preprocess(init_frame)
@@ -32,14 +33,14 @@ class FrameStack:
         for _ in range(self.cap):
             self.buffer.append(first)
         
-        return torch.from_numpy(np.stack(self.buffer, axis=0)).float()
+        return torch.from_numpy(np.stack(self.buffer, axis=0)).float().to(self.device)
 
     def add(self, frame: np.ndarray):
         to_add = preprocess(frame)
         
         self.buffer.append(to_add)
         
-        return torch.from_numpy(np.stack(self.buffer, axis=0)).float()
+        return torch.from_numpy(np.stack(self.buffer, axis=0)).float().to(self.device)
     
 class Transition(NamedTuple):
     state: Any
@@ -49,10 +50,11 @@ class Transition(NamedTuple):
     done: Any
 
 class ReplayBuffer:
-    def __init__(self, cap, batch_size):
+    def __init__(self, cap: int, batch_size: int, device: Union[torch.device, str]):
         self.cap = cap
         self.buffer = deque(maxlen=cap)
         self.batch_size = batch_size
+        self.device = device
     
     def add(self, t: Transition):
         self.buffer.append(t)
