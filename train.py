@@ -43,8 +43,9 @@ for i in range(TRAIN_STEPS):
     
     obs, info = env.reset()
     state = stacker.reset(obs).unsqueeze(0)
-    print(f"Episode: {i}")
-    print(f"Total Reward: {total}")
+    if i % 100 == 0:
+        print(f"Episode: {i}")
+        print(f"Total Reward: {total}")
     total = 0
 
 env.close()

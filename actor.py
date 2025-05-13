@@ -12,13 +12,13 @@ class DQNAgent:
     
     def act(self, obs, epsilon=0.0):
         if torch.rand(1) < epsilon:
-            return torch.randint(self.net.out_shape, (1,))
+            return torch.randint(self.net.out_shape, (1,)).to(self.device)
         
         return torch.argmax(self.net(obs), dim=1).to(self.device)
 
     def train_step(self, batch):
         Q_pred = self.net(torch.stack(batch.state).to(self.device))
-        Q_pred = torch.gather(Q_pred, 1, torch.stack(batch.action))
+        Q_pred = torch.gather(Q_pred, 1, torch.stack(batch.action).to(self.device))
         
         with torch.no_grad():
             nextQ = self.net(torch.stack(batch.next_state).to(self.device))
