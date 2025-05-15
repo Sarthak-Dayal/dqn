@@ -4,7 +4,9 @@ from torch import nn
 
 class DQNAgent:
     def __init__(self, obs_shape, num_actions, gamma, device):
-        self.net = QNetwork(obs_shape, num_actions).to(device)
+        self.policy_net = QNetwork(obs_shape, num_actions).to(device)
+        self.target_net = QNetwork(obs_shape, num_actions).to(device)
+        self.target_net.load_state_dict(self.policy_net.state_dict())
         self.device = device
         self.gamma = gamma
         self.criterion = nn.MSELoss()
