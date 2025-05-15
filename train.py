@@ -29,8 +29,11 @@ for i in range(TRAIN_STEPS):
     terminated, truncated = False, False
     eps = max(eps_min, eps_start - i * decay_rate)
 
+    if i < LEARNING_STARTS:
+        act = torch.tensor(env.action_space.sample()).to(DEVICE).unsqueeze(0)
+    else:
+        act = actor.act(state, eps)
 
-    act = actor.act(state, eps)
     obs, reward, terminated, truncated, info = env.step(act)
     next_state = stacker.add(obs)
     buffer.add(Transition(state.squeeze(0), act, reward, next_state, terminated or truncated))

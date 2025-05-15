@@ -57,6 +57,8 @@ class ReplayBuffer:
         self.device = device
     
     def add(self, t: Transition):
+        if isinstance(t.state, torch.Tensor):
+            t = Transition(t.state.detach().cpu(), t.action.detach().cpu(), t.reward, t.next_state.detach().cpu(), t.done)
         self.buffer.append(t)
     
     def sample(self):
@@ -64,7 +66,16 @@ class ReplayBuffer:
             raise ValueError(f"Requested {self.batch_size} samples, but buffer contains only {len(self.buffer)}")
         
         transitions = random.sample(self.buffer, self.batch_size)
-        return Transition(*zip(*transitions))
+        
+        batch = Transition(*zip(*transitions))
+        
+        state = torch.stack(batch.state).to(self.device)
+        action = torch.stack(batch.action).to(self.device)
+        reward = torch.tensor(batch.reward).to(self.device)
+        next_state = torch.stack(batch.next_state).to(self.device)
+        done = torch.tensor(batch.done).float().to(self.device)
+        
+        return Transition(state, action, reward, next_state, done)
 
     def __len__(self):
         return len(self.buffer)
