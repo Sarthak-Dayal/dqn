@@ -58,7 +58,8 @@ class ReplayBuffer:
     
     def add(self, t: Transition):
         if isinstance(t.state, torch.Tensor):
-            t = Transition(t.state.detach().cpu(), t.action.detach().cpu(), t.reward, t.next_state.detach().cpu(), t.done)
+            # store ints to save memory, divide by 255.0 later.
+            t = Transition(t.state.detach().cpu().to(torch.int8), t.action.detach().cpu(), t.reward, t.next_state.detach().cpu().to(torch.int8), t.done)
         self.buffer.append(t)
     
     def sample(self):

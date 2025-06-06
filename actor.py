@@ -9,8 +9,8 @@ class DQNAgent:
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.device = device
         self.gamma = gamma
-        self.criterion = nn.MSELoss()
-        self.optim = torch.optim.Adam(self.policy_net.parameters(), lr=1e-4)
+        self.criterion = nn.SmoothL1Loss()
+        self.optim = torch.optim.RMSprop(self.policy_net.parameters(), lr=1e-4)
     
     @torch.no_grad()
     def act(self, obs, epsilon=0.0):
@@ -24,14 +24,15 @@ class DQNAgent:
         Q_pred = torch.gather(Q_pred, 1, batch.action)
         
         with torch.no_grad():
-            nextQ = self.policy_net(batch.next_state)
+            nextQ = self.target_net(batch.next_state).max(1)[0]
         
             # if a state is done, do not bootstrap
             # dim 0 is batch dim, dim 1 should be a bunch of Q values for all actions, we want the max
-            expected = batch.reward + self.gamma * torch.max(nextQ, dim=1).values * (1.0 - batch.done)
+            expected = batch.reward + self.gamma * nextQ * (1.0 - batch.done)
         
         loss = self.criterion(Q_pred, expected.unsqueeze(1))
         self.optim.zero_grad()
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.policy_net.parameters(), 10.0)
         self.optim.step()
-        
+        return loss.item()
