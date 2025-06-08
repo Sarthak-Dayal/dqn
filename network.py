@@ -22,3 +22,20 @@ class QNetwork(nn.Module):
     def forward(self, input):
         Qs = self.net(input)
         return Qs
+
+class MLPQNetwork(nn.Module):
+    def __init__(self, obs_shape, num_actions):
+        super().__init__()
+        self.in_shape = obs_shape[0]
+        self.out_shape = num_actions
+
+        self.net = nn.Sequential(
+            nn.Linear(self.in_shape, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, self.out_shape)
+        )
+
+    def forward(self, x):
+        return self.net(x)

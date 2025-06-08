@@ -10,11 +10,12 @@ DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 STACKER_CAP = 4
 REPLAY_CAP = 1000000
 LEARNING_STARTS = 50000
-BATCH_SIZE = 128
-TRAIN_STEPS = 1000000
+BATCH_SIZE = 32
+TRAIN_STEPS = 50_000_000
+ANNEAL_END = 1_000_000
 TARGET_UPDATE_FREQ = 10000
 GAMMA = 0.99
-eps_min, eps_start, decay_rate = 0.05, 1, 1/(TRAIN_STEPS//2)
+eps_min, eps_start, decay_rate = 0.05, 1, 1/ANNEAL_END
 
 stacker = FrameStack(STACKER_CAP, DEVICE)
 buffer = ReplayBuffer(REPLAY_CAP, BATCH_SIZE, DEVICE)
